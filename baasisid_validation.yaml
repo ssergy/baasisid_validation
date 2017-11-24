@@ -1,0 +1,687 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  description: |
+    ## BAASIS ID integration
+
+    **The order of terminal operations with API:**
+
+
+    1) Call method: /base-check
+
+
+    Using the method, you send basic user parameters
+
+
+    2) * OPTIONAL - Call for One-Time-Password /send-sms
+
+
+    3) * OPTIONAL - SMS code received from the user is sent to /check-sms-code
+
+
+    4) * OPTIONAL -  Photo of the user document is sent to /send-document
+
+
+    (2 requests in the case of a two-sided document - ID card)
+
+
+    5) * OPTIONAL -  Send user's video (selfy) to /send-video
+
+    6) In order to receive information about the user's data confirmation, it is required frequently make a request to
+    /users/{user_hash}/{api_access_token}
+
+  title: BAASIS ID
+tags:
+  - name: auth
+  - name: users
+consumes:
+  - application/json
+produces:
+  - application/json
+host: api.baasisid.com
+basePath: /
+paths:
+  /auth/base-check:
+    post:
+      tags:
+        - auth
+      summary: Registration start - send basic data
+      description: >-
+        The first step of registering a new user, sending basic data about user
+        to server
+      operationId: send-form
+      parameters:
+        - name: key
+          in: query
+          required: true
+          type: string
+          description: BAASIS ID API KEY (from panel)
+          x-example: prod-pHmeBukoXXXXXpXFjOhvjmrXxwwbtZOn
+        - name: first_name
+          in: query
+          required: true
+          type: string
+          description: User first name
+          x-example: John
+        - name: last_name
+          in: query
+          required: true
+          type: string
+          description: User last name
+          x-example: Doe
+        - name: middle_name
+          in: query
+          required: false
+          type: string
+          description: User middle name
+          x-example: Young
+        - name: email
+          in: query
+          required: true
+          type: string
+          description: User e-mail address
+          x-example: test123@testmail.com
+        - name: phone
+          in: query
+          required: true
+          type: string
+          description: >-
+            The phone number of the user in the following format [country
+            code]-[phone number]
+          x-example: 7-9181234567
+        - name: phone2
+          in: query
+          required: false
+          type: string
+          description: >-
+            Additional phone number of the user in the following format [country
+            code]-[phone number]
+          x-example: 7-9181234567
+        - name: gender
+          in: query
+          required: true
+          type: number
+          description: 'Gender, 0 - male, 1 - female'
+          x-example: 0
+        - name: birthday_day
+          in: query
+          required: true
+          type: string
+          description: 'User birthday day (valid day number, 1-31)'
+        - name: birthday_month
+          in: query
+          required: true
+          type: string
+          description: User birthday month number (1 - January .. 12 - December)
+        - name: birthday_year
+          in: query
+          required: true
+          type: string
+          description: 'User birthday year, valid year number, from 1917 to current year'
+        - name: country_nationality
+          in: query
+          required: true
+          type: string
+          description: 'Country of citizenship, iso2 code'
+        - name: country_residence
+          in: query
+          required: false
+          type: string
+          description: 'Country of residence, iso2 code'
+        - name: city
+          in: query
+          required: false
+          type: string
+          description: City
+        - name: address
+          in: query
+          required: false
+          type: string
+          description: Address
+        - name: address2
+          in: query
+          required: false
+          type: string
+          description: Aditional address
+        - name: zip
+          in: query
+          required: false
+          type: string
+          description: Index
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - status
+              - checkId
+              - userHash
+              - api_access_token
+              - api_refresh_token
+            type: object
+            properties:
+              status:
+                type: string
+                description: Request status
+                example: ok
+              userHash:
+                type: string
+                description: Unique user hash
+                example: 9146288d95b60ffa6d043ed7c9b8cf07bd1edaf7
+              checkId:
+                type: number
+                description: Unique user ID
+              api_access_token:
+                type: string
+                description: >-
+                  Token to retrieve user data through a server-side API Lifetime
+                  of the token is 60 minutes
+                example: aat-gewyTfImeRqsKXhgbdOYAfGNVigmaCfcpaANTJpu
+              api_refresh_token:
+                type: string
+                description: Token for updating user data through a server-side API
+                example: art-tqcJQSzbPHuFhHcIjVoOlMKuyntJoZJKGIzgNDgb
+              errors:
+                type: array
+                description: >-
+                  Error values (for status: bad)
+
+                    "error:key" -  API_KEY is not specified
+
+                    "empty:first_name" -  first name is not specified
+
+                    "empty:last_name" - last name is not specified
+
+                    "empty:phone" - phone number is not specified
+
+                    "empty:email" - e-mail is not specified
+
+                    "empty:birthday_day" - date of birth error
+
+                    "empty:birthday_month" - month of birth error
+
+                    "empty:birthday_year" - year of birth error
+
+                    "user:exists" -  user with this e-mail/phone number already exists"
+          examples:
+            application/json:
+              status: ok
+              userHash: c3732a00d5e297ba5a83504dfe1f2cdb310d0f80
+              checkId: 890
+        '400':
+          description: >-
+            Bad request - input error (could not parse the JSON input request)
+        '500':
+          description: >-
+            Internal Server Error - problem with processing data on server.
+            Please, contact with support team
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl \
+                -H "Content-Type: application/json" \
+                -X POST -d '{"key": "API_KEY", "first_name": "John", "last_name": "Doe", "middle_name": "", "email": "johndoe777@testdemo.com", "phone": "+79998885566", "phone2": "", "gender": 0, "birthday_day": "01", "birthday_month": "07", "birthday_year": "1983", "country_nationality": "SG", "country_residence": "SG", "city": "Singapore", "address": "Last Street, 19-99", "zip": "54321"}' \
+                https://api.baasisid.com/auth/base-check
+  /auth/send-sms:
+    post:
+      tags:
+        - auth
+      summary: OTP sms request (optional)
+      description: Sending SMS to the user to confirm a phone number
+      operationId: send-sms
+      parameters:
+        - name: user_hash
+          in: query
+          required: true
+          type: string
+          description: User hash (received in the /send-form step)
+        - name: check_id
+          in: query
+          required: true
+          type: string
+          description: Unique registration ID (received in the /send form step)
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - phone
+              - status
+            type: object
+            properties:
+              status:
+                type: string
+                description: >-
+                  Request status. Values: ok, bad
+                example: ok
+              phone:
+                type: string
+                description: >-
+                  The phone number of the user in the following format [country
+                  code]-[phone number]
+                example: 1-2345678900
+              errors:
+                type: array
+                description: >-
+                  Error values (for status: bad)
+
+                  empty:user_hash - no user_hash
+
+                  empty:check_id - no check_id
+          examples:
+            application/json:
+              status: ok
+              phone: 1-2345678900
+        '400':
+          description: >-
+            Bad request - input error (could not parse the JSON input request)
+        '500':
+          description: >-
+            Internal Server Error - problem with processing data on server
+            Please, contact with support team
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl \
+                -H "Content-Type: application/json" \
+                -X POST -d '{"user_hash": "c3732a00d5e297ba5a83504dfe1f2cdb310d0f80", "check_id": 890}' \
+                https://api.baasisid.com/auth/send-sms
+  /auth/check-sms-code:
+    post:
+      tags:
+        - auth
+      summary: Checking the OTP (SMS) code  (optional)
+      description: OTP (SMS) code checking
+      operationId: check-sms-code
+      parameters:
+        - name: user_hash
+          in: query
+          required: true
+          type: string
+          description: User hash (received in the /send-form step)
+        - name: check_id
+          in: query
+          required: true
+          type: string
+          description: User registration ID (received in the /send-form step)
+        - name: phone
+          in: query
+          required: true
+          type: string
+          description: >-
+            The phone number of the user in the following format [country
+            code]-[phone number]
+          x-example: 7-9181234567
+        - name: code
+          in: query
+          required: true
+          type: string
+          description: Verification code (OTP code) received in SMS
+          x-example: '12345'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - phone
+              - status
+            type: object
+            properties:
+              status:
+                type: string
+                description: >-
+                  Request status. Values: ok, bad
+                example: ok
+              phone:
+                type: string
+                description: >-
+                  The phone number of the user in the following format [country
+                  code]-[phone number]
+                example: 1-2345678900
+              errors:
+                type: array
+                description: >-
+                  Error values (for status: bad)
+                items:
+                  description: >-
+                    empty:code - wrong or empty OTP code from SMS
+                    empty:user_hash - no user_hash
+                    empty:check_id - no check_id
+          examples:
+            application/json:
+              status: ok
+              phone: 1-2345678900
+        '400':
+          description: >-
+            Bad request - input error (could not parse the JSON input request)
+        '500':
+          description: >-
+            Internal Server Error - problem with processing data on server
+            Please, contact with support team
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl \
+                -H "Content-Type: application/json" \
+                -X POST -d '{"user_hash": "c3732a00d5e297ba5a83504dfe1f2cdb310d0f80", "check_id": 890, "phone": "1-2345678900", "code": "5555"}' \
+                https://api.baasisid.com/auth/check-sms-code
+  /auth/send-document:
+    post:
+      tags:
+        - auth
+      summary: Upload documents to server  (optional)
+      description: Upload user passport or ID card (2 side photo) on the server
+      operationId: send-document
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: user_hash
+          in: query
+          required: true
+          type: string
+          description: User hash
+        - name: check_id
+          in: query
+          required: true
+          type: string
+          description: User registration ID (received in the /send-form step)
+        - name: file
+          in: formData
+          required: true
+          type: file
+          format: binary
+          description: Image file
+        - name: step
+          in: query
+          required: false
+          type: string
+          description: >-
+            Document side numeration. "1" by default. For second side of ID card
+            specify "2".
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                type: string
+                description: Upload status
+                example: ok
+          examples:
+            application/json:
+              status: ok
+        '400':
+          description: input data error
+        '404':
+          description: wrong check_id OR user_hash values
+        '500':
+          description: >-
+            Internal Server Error - problem with processing data on server.
+            Please, contact with support team
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl \
+              -F "user_hash=c3732a00d5e297ba5a83504dfe1f2cdb310d0f80" \
+              -F "check_id=890" \
+              -F "step=1" \
+              -F "file=@/path/to/img.jpg" \
+            https://api.baasisid.com/auth/send-document
+  /auth/send-video:
+    post:
+      tags:
+        - auth
+      summary: Upload video to server  (optional)
+      description: Upload user video to server
+      operationId: send-video
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: user_hash
+          in: query
+          required: true
+          type: string
+          description: User hash
+        - name: check_id
+          in: query
+          required: true
+          type: string
+          description: User registration ID (received in the /send-form step)
+        - name: file
+          in: formData
+          required: true
+          type: file
+          format: binary
+          description: Video recording file
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                type: string
+                description: Upload status
+                example: ok
+          examples:
+            application/json:
+              status: ok
+        '400':
+          description: input data error
+        '404':
+          description: wrong check_id OR user_hash values
+        '500':
+          description: >-
+            Internal Server Error - problem with processing data on server.
+            Please, contact with support team
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl \
+              -F "user_hash=c3732a00d5e297ba5a83504dfe1f2cdb310d0f80" \
+              -F "check_id=890" \
+              -F "file=@/path/to/mov.MOV" \
+            https://api.baasisid.com/auth/send-video
+  '/users/{user_hash}/{api_access_token}':
+    post:
+      tags:
+        - users
+      summary: Receiving user information and status validation
+      description: |
+        Receiving user information and status validation after registration.
+
+      operationId: users
+      parameters:
+        - name: user_hash
+          in: path
+          required: true
+          type: string
+          description: 'User hash ID, received after registration'
+        - name: api_access_token
+          in: path
+          required: true
+          type: string
+          description: 'Token for API access, received after registration'
+        - name: secret
+          in: query
+          required: true
+          type: string
+          description: >-
+            BAASIS ID SECRET1 - secret key, accessible in BAASIS ID CRM dashboard.
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                type: string
+                description: >-
+                  For failed result:
+                    denied - access denied
+                    not_found - user is not found (wrong user_hash, api_access_token)
+                  For success result:
+                    The status of the result. Numerical field.  If status is less
+                    than 10 - data processing is not completed.  The status is 10
+                    - user is approved/confirmed.  The status more than 10 -
+                    errors occurred while approving the user.
+                example: 10
+              token:
+                type: string
+                description: >-
+                  Api access token (used in request)
+              user_status:
+                type: number
+                description: >-
+                  The status of result. If status is less
+                  than 10 - data processing is not completed.  The status is 10
+                  - user is approved/confirmed.  The status more than 10 -
+                  errors occurred while approving the user.
+              profile:
+                type: object
+                description: >-
+                  User profile
+                properties:
+                  id:
+                    type: number
+                    description: Unique numeric user ID
+                  user_hash:
+                    type: string
+                    description: Unique user hash
+                  first_name:
+                    type: string
+                    description: First Name
+                  last_name:
+                    type: string
+                    description: Surname
+                  middle_name:
+                    type: string
+                    description: Middle name
+                  email_confirmed:
+                    type: boolean
+                    description: E-mail confirmation flag. true - e-mail confirmed
+                  email:
+                    type: string
+                    description: E-mail address
+                  phone:
+                    type: string
+                    description: >-
+                      Phone number. The user's phone is confirmed through
+                      one-time-passcode (OTP)
+                  phone2:
+                    type: string
+                    description: Additional phone number
+                  company_application_form:
+                    type: string
+                    description: Link to the company details form of filling
+                  gender:
+                    type: number
+                    description: 'Gender. 0 - male, 1 - female'
+                  country:
+                    type: string
+                    description: Country of citizenship
+                  birthday:
+                    type: string
+                    description: Date of birth in following format - YYYY-MM-DD
+                  country_residence:
+                    type: string
+                    description: Country of residence
+                  city:
+                    type: string
+                    description: City
+                  address:
+                    type: string
+                    description: Address
+                  address2:
+                    type: string
+                    description: Additional address fied
+                  zip:
+                    type: string
+                    description: Zip/Postal code
+                  passport:
+                    type: string
+                    description: Link to a photo of user document (passport/ID card)
+                  passport2:
+                    type: string
+                    description: >-
+                      Link to a photo of second side of user document (applicable to
+                      ID card)
+        '500':
+          description: >-
+            Internal Server Error - problem with processing data on server
+            Please, contact with support team
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl \
+                -H "Content-Type: application/json" \
+                -X GET https://api.baasisid.com/users/b84caa8cb9097361b89509c7395be1e7f7743442/aat-d67b6cd3-7255-4203-b351-3bd26233dcc8?secret=BAASIS_API_SECRET1
+  '/users/refresh-access-token/{api_refresh_token}':
+    post:
+      tags:
+        - users
+      summary: Refresh user token
+      description: |
+        Refresh user token after expiration
+      operationId: users
+      parameters:
+        - name: api_refresh_token
+          in: path
+          required: true
+          type: string
+          description: 'refresh token, received after registration'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - status
+              - api_access_token
+              - api_refresh_token
+            type: object
+            properties:
+              status:
+                type: string
+                description: >
+                  Validation status. Values: ok, denied, not_found
+                example: ok
+              api_access_token:
+                type: string
+                description: >-
+                  Token to retrieve user data through a server-side API.
+                  Lifetime of the token is 60 minutes
+                example: aat-gewyTfImeRqsKXhgbdOYAfGNVigmaCfcpaANTJpu
+              api_refresh_token:
+                type: string
+                description: Token for updating user data through a server-side API
+                example: art-tqcJQSzbPHuFhHcIjVoOlMKuyntJoZJKGIzgNDgb
+              errors:
+                type: array
+                description: >-
+                  Error values (for status: bad)
+
+                    empty:user_hash - no user_hash
+
+                    empty:check_id - no check_id
+          examples:
+            application/json:
+              status: ok
+              api_access_token: aat-yJTccTTPMcBwhmuifKDiINndzqMbzLHmZqOZPGlw
+              api_refresh_token: art-AIzyhpLMnDpstCnAxjYaAYPKMWFIoRRYBZAxlmtY
+        '500':
+          description: >-
+            Internal Server Error - problem with processing data on server.
+            Please, contact with support team
+      x-code-samples:
+        - lang: Curl
+          source: |
+            curl \
+                -H "Content-Type: application/json" \
+                -X GET https://api.baasisid.com/users/refresh-access-token/art-AIzyhpLMnDpstCnAxjYaAYPKMWFIoRRYBZAxlmtY
