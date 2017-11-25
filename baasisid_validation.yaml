@@ -30,10 +30,10 @@ info:
     6) In order to receive information about the user's data confirmation, it is required frequently make a request to
     /users/{user_hash}/{api_access_token}
 
-  title: BAASIS ID
+  title: BAASIS ID Verification API
 tags:
-  - name: auth
-  - name: users
+  - name: send data
+  - name: check data
 consumes:
   - application/json
 produces:
@@ -44,7 +44,7 @@ paths:
   /auth/base-check:
     post:
       tags:
-        - auth
+        - send data
       summary: Registration start - send basic data
       description: >-
         The first step of registering a new user, sending basic data about user
@@ -225,7 +225,7 @@ paths:
   /auth/send-sms:
     post:
       tags:
-        - auth
+        - send data
       summary: OTP sms request (optional)
       description: Sending SMS to the user to confirm a phone number
       operationId: send-sms
@@ -289,7 +289,7 @@ paths:
   /auth/check-sms-code:
     post:
       tags:
-        - auth
+        - send data
       summary: Checking the OTP (SMS) code  (optional)
       description: OTP (SMS) code checking
       operationId: check-sms-code
@@ -368,7 +368,7 @@ paths:
   /auth/send-document:
     post:
       tags:
-        - auth
+        - send data
       summary: Upload documents to server  (optional)
       description: Upload user passport or ID card (2 side photo) on the server
       operationId: send-document
@@ -433,7 +433,7 @@ paths:
   /auth/send-video:
     post:
       tags:
-        - auth
+        - send data
       summary: Upload video to server  (optional)
       description: Upload user video to server
       operationId: send-video
@@ -490,7 +490,7 @@ paths:
   '/users/{user_hash}/{api_access_token}':
     post:
       tags:
-        - users
+        - check data
       summary: Receiving user information and status validation
       description: |
         Receiving user information and status validation after registration.
@@ -626,7 +626,7 @@ paths:
   '/users/refresh-access-token/{api_refresh_token}':
     post:
       tags:
-        - users
+        - check data
       summary: Refresh user token
       description: |
         Refresh user token after expiration
