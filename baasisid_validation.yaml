@@ -30,6 +30,62 @@ info:
     6) In order to receive information about the user's data confirmation, it is required frequently make a request to
     /users/{user_hash}/{api_access_token}
 
+    or receive callback from our API about customer status changing
+
+    7) Status callback
+
+    Callback is being sent if a user’s status is changed to ‘approved’ or ‘declined’.
+    In case of post moderation, callback is only being sent when your company performs double check on the client.
+
+    To enable callback, please install Callback Url in CRM settings.
+
+    An example of callback request:
+    ```
+    {"user_id":2027,
+     "user_hash":"27c5728a-7130-408d-b0a1-d55ed8ae7b2f",
+     "status":11,
+     "signature":"7ca05937a0e5c42147be2aa23ffad87e80bd866e1ff7950ec6841d4d87d844fe",
+     "autocheck_bad_reasons":""}
+    ```
+
+    * user_id - user’s ID
+    * user_hash - user’s unique hash
+    * status - user’s status (10 - user is confirmed; 11 - user is declined)
+    * autocheck_bad_reasons - the reason for the request to be automatically declined
+    * signature - signature of the request
+
+    Your request is signed as BAASIS_API_SECRET2 (can be found in CRM settings)
+    To create a signature you need to get sha256 hash from concatenation of the following line:
+
+    ```
+    BAASIS_API_SECRET2+user_id+user_hash+status+autocheck_bad_reasons
+    ```
+
+    Java signature example:
+    ```
+    String sign256hex = org.apache.commons.codec.digest.DigestUtils.sha256Hex(BAASIS_API_SECRET2 + user_id + user_hash + status + autocheck_bad_reasons);
+    if (sign256hex.equals(signature)) {
+        // Signed ...
+    }
+    ```
+
+    PHP signature example:
+    ```
+    $signature = hash('sha256', BAASIS_API_SECRET2 . $inp['user_id'] . $inp['user_hash'] . $inp['status'] . $inp['autocheck_bad_reasons']);
+    if ($signature == $inp['signature']) {
+
+    }
+    ```
+
+    In response to callback you have to send the status “200OK” with any text, for example, “OK”.
+
+    If a response has not been received or it did not contain “200OK”, the system stops sending requests for 3 minutes.
+    After 3 minutes it retries to send a request.  And so on.
+
+    <br />
+    <br />
+
+
   title: BAASIS ID Verification API
 tags:
   - name: send data
