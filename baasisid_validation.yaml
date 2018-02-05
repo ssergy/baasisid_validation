@@ -95,6 +95,7 @@ consumes:
 produces:
   - application/json
 host: api.baasisid.com
+schemes: https
 basePath: /
 paths:
   /auth/base-check:
@@ -544,7 +545,7 @@ paths:
               -F "file=@/path/to/mov.MOV" \
             https://api.baasisid.com/auth/send-video
   '/users/{user_hash}/{api_access_token}':
-    post:
+    get:
       tags:
         - check data
       summary: Receiving user information and status validation
@@ -680,7 +681,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -X GET https://api.baasisid.com/users/b84caa8cb9097361b89509c7395be1e7f7743442/aat-d67b6cd3-7255-4203-b351-3bd26233dcc8?secret=BAASIS_API_SECRET1
   '/users/refresh-access-token/{api_refresh_token}':
-    post:
+    get:
       tags:
         - check data
       summary: Refresh user token
